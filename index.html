@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#0b1220">
+<title>HISTORY MASTER</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0b1220;color:#f5f7fb;font-family:Arial,sans-serif}
+.app{max-width:720px;margin:auto;padding:16px}.top{display:flex;justify-content:space-between;align-items:center}
+.logo{font-weight:900;font-size:20px}.logo span{color:#f4c95d}.stats{display:flex;gap:6px}.badge{background:#111b2e;border:1px solid #2a3a57;padding:7px 9px;border-radius:20px;font-size:13px}
+.screen{display:none}.screen.active{display:block}.card{background:#111b2e;border:1px solid #2a3a57;border-radius:20px;padding:20px;margin-top:16px}
+.hero{text-align:center;padding:30px 20px}.hero h1{font-size:34px;margin:10px 0}.muted{color:#aeb9cc;line-height:1.5}
+button{font:inherit}.primary{width:100%;padding:14px;touch-action:manipulation;position:relative;z-index:2;border:0;border-radius:14px;background:#f4c95d;color:#111827;font-weight:900;cursor:pointer}
+.secondary{padding:10px 14px;touch-action:manipulation;position:relative;z-index:2;border:1px solid #2a3a57;border-radius:12px;background:transparent;color:#fff;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px}.level{aspect-ratio:1;border:1px solid #2a3a57;background:#111b2e;color:#fff;border-radius:14px;font-weight:900}.level.lock{opacity:.4}.level.done{background:#123326}.level.current{outline:2px solid #f4c95d}
+.progress{height:8px;background:#070c15;border-radius:10px;overflow:hidden;margin:12px 0}.progress i{display:block;height:100%;background:#f4c95d;width:20%}
+.qnum{color:#f4c95d;font-size:13px;font-weight:800}.question{font-size:21px;line-height:1.4;margin:12px 0 18px}.answers{display:grid;gap:10px}.answer{padding:14px;text-align:left;border:1px solid #344866;border-radius:13px;background:#17243b;color:#fff;cursor:pointer}.answer.correct{background:#123c2a;border-color:#35d07f}.answer.wrong{background:#451d25;border-color:#ff6262}.answer:disabled{cursor:default}
+.msg{text-align:center;min-height:24px;margin:10px 0;font-weight:700}.good{color:#35d07f}.bad{color:#ff6262}.timerbox{text-align:center;margin:8px 0;color:#f4c95d;font-size:18px}.timerbox.warning{color:#ff6262}.controls{display:grid;grid-template-columns:1fr 1fr 1fr;gap:7px}.life{padding:10px 4px;border:1px solid #2a3a57;border-radius:11px;background:#16243a;color:#fff}.life:disabled{opacity:.35}
+.modal{display:none;position:fixed;inset:0;background:#000b;align-items:center;justify-content:center;padding:18px}.modal.show{display:flex}.modalbox{max-width:480px;width:100%;background:#111b2e;border:1px solid #2a3a57;border-radius:20px;padding:22px}
+@media(max-width:420px){.hero h1{font-size:29px}.question{font-size:19px}}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="top"><div class="logo">HISTORY <span>MASTER</span></div><div class="stats"><div class="badge">🪙 <b id="coins">100</b></div><div class="badge">❤️ <b id="lives">3</b></div><div class="badge">🏆 <b id="high">0</b></div></div></div>
+
+<section id="home" class="screen active">
+<div class="card hero"><div>MAIN GAME • V5</div><h1>How far can your knowledge take you?</h1>
+<p class="muted">Climb through an endless history challenge. Each level has 5 questions. One wrong answer restarts the current level.</p>
+<button type="button" class="primary" id="playBtn">PLAY HISTORY MASTER</button></div>
+<div class="card"><b>V5 systems</b><button class="secondary" id="soundBtn" onclick="toggleSound()">🔊 Sound ON</button><p>⏱️ Timed questions + speed bonus</p><p>❤️ Lives + coin recovery</p><p>🏆 High score + achievements</p><p>🔥 Answer streaks</p><p>🪙 Coins for lifelines</p><p>📚 40 playable levels • 200 questions</p></div><div class="card"><button class="secondary" onclick="recoverLife()">❤️ Recover 1 life • 30 coins</button> <button class="secondary" onclick="dailyReward()">🎁 Daily Reward</button> <button class="secondary" onclick="showAchievements()">🏆 Achievements</button></div><div class="card"><b>Game foundation</b><p>🌍 African & Nigerian history</p><p>🏛️ Ancient civilizations</p><p>⚔️ Wars, rulers & events</p><p>🔬 Discoveries & inventions</p><p>🏆 Progressive, expandable levels</p></div>
+</section>
+
+<section id="map" class="screen">
+<div class="top"><h2>Level Map</h2><button class="secondary" onclick="show('home')">Home</button></div>
+<div class="card"><b id="current">Level 1</b><p class="muted">Complete all 5 questions to unlock the next level. Levels now extend to 100+ as new question packs are added.</p><select id="catFilter" class="secondary" onchange="renderMap()"><option value="All">All categories</option><option value="Ancient History">Ancient History</option><option value="West African History">West African History</option><option value="World History">World History</option><option value="Ancient Africa">Ancient Africa</option><option value="Nigerian History">Nigerian History</option><option value="African Kingdoms & Empires">African Kingdoms & Empires</option><option value="Ancient Civilizations">Ancient Civilizations</option><option value="Explorers & Discoveries">Explorers & Discoveries</option><option value="Major Wars & Historical Events">Major Wars & Historical Events</option><option value="Mixed Challenge">Mixed Challenge</option></select></div>
+<div class="grid" id="levels"></div>
+</section>
+
+<section id="game" class="screen">
+<div class="top"><button class="secondary" onclick="openMap()">← Levels</button><b id="levelTitle">LEVEL 1</b><span>Score: <b id="score">0</b></span></div><div class="muted" style="margin-top:8px">🔥 Streak: <b id="streak">0</b></div><div class="timerbox" id="timerbox">⏱️ <b id="timer">30</b>s</div>
+<div class="progress"><i id="bar"></i></div>
+<div class="card"><div class="qnum" id="qnum"></div><div class="question" id="q"></div><div class="answers" id="answers"></div><div class="msg" id="msg"></div>
+<div class="controls"><button class="life" id="fifty" onclick="fifty()">🌓 50/50</button><button class="life" id="skip" onclick="skip()">🔄 Change</button><button class="life" onclick="rules()">❓ Rules</button></div></div>
+</section>
+</div>
+
+<div id="modal" class="modal" onclick="if(event.target===this)closeModal()"><div class="modalbox"><h2 id="mt"></h2><p class="muted" id="mb"></p><button class="primary" onclick="closeModal()">CONTINUE</button></div></div><div id="achModal" class="modal" onclick="if(event.target===this)closeAchievements()"><div class="modalbox"><h2>🏆 Achievements</h2><div id="achList" class="muted"></div><button class="primary" onclick="closeAchievements()">CLOSE</button></div></div>
+
+<script>
+const BANK=[
+{level:1,category:"Ancient History",questions:[
+{q:"Which ancient civilization built the pyramids at Giza?",a:["Ancient Egyptians","Romans","Vikings","Mongols"],c:0},
+{q:"Who was the first Roman emperor?",a:["Julius Caesar","Augustus","Nero","Constantine"],c:1},
+{q:"Carthage was located in which modern-day country?",a:["Egypt","Tunisia","Greece","Turkey"],c:1},
+{q:"Which river was central to ancient Egyptian civilization?",a:["Nile","Amazon","Danube","Ganges"],c:0},
+{q:"Which writing system was used in ancient Mesopotamia?",a:["Hieroglyphs","Cuneiform","Latin","Hangul"],c:1}]},
+{level:2,category:"West African History",questions:[
+{q:"Who founded the Mali Empire according to traditional accounts?",a:["Mansa Musa","Sundiata Keita","Shaka Zulu","Askia Muhammad"],c:1},
+{q:"Mansa Musa ruled which West African empire?",a:["Mali","Songhai","Benin","Kanem-Bornu"],c:0},
+{q:"Timbuktu became famous historically as a center of what?",a:["Learning","Shipbuilding","Mining","Silk production"],c:0},
+{q:"Which empire became a major West African power after Mali?",a:["Songhai","Byzantine","Mughal","Aztec"],c:0},
+{q:"Mansa Musa's famous pilgrimage was to which city?",a:["Mecca","Rome","Beijing","Paris"],c:0}]},
+{level:3,category:"World History",questions:[
+{q:"Which revolution began in France in 1789?",a:["French Revolution","Industrial Revolution","Crusades","Cold War"],c:0},
+{q:"Who was the first president of the United States?",a:["Abraham Lincoln","George Washington","Thomas Jefferson","John Adams"],c:1},
+{q:"The Industrial Revolution began first in which country?",a:["Britain","Japan","Brazil","Canada"],c:0},
+{q:"Which treaty formally ended World War I with Germany?",a:["Treaty of Versailles","Treaty of Rome","Treaty of Tordesillas","Treaty of Paris 1763"],c:0},
+{q:"Pompeii was buried after the eruption of which volcano?",a:["Etna","Vesuvius","Kilimanjaro","Olympus"],c:1}]},
+{level:4,category:"Ancient Africa",questions:[
+{q:"Which ancient African kingdom was centered in the region of present-day Sudan?",a:["Kush","Mali","Benin","Ashanti"],c:0},
+{q:"Great Zimbabwe is most closely associated with which region?",a:["Southern Africa","North Africa","Western Europe","East Asia"],c:0},
+{q:"Which city became a major center of scholarship in the medieval Mali Empire?",a:["Timbuktu","Lagos","Cairo","Alexandria"],c:0},
+{q:"The ancient kingdom of Aksum was located mainly in which part of Africa?",a:["Horn of Africa","West Africa","Southern Africa","Central Africa"],c:0},
+{q:"Great Zimbabwe is associated with the ancestors of which people?",a:["Shona","Vikings","Aztecs","Romans"],c:0}]},
+{level:5,category:"Nigerian History",questions:[
+{q:"Nigeria gained independence from Britain in which year?",a:["1957","1960","1963","1970"],c:1},
+{q:"Who became Nigeria's first Prime Minister after independence?",a:["Nnamdi Azikiwe","Abubakar Tafawa Balewa","Obafemi Awolowo","Ahmadu Bello"],c:1},
+{q:"Who was Nigeria's first President after independence?",a:["Nnamdi Azikiwe","Yakubu Gowon","Olusegun Obasanjo","Abdulsalami Abubakar"],c:0},
+{q:"The ancient Nok culture is especially known for its distinctive what?",a:["Terracotta sculptures","Pyramids","Silk textiles","Bronze cannons"],c:0},
+{q:"Which historic city was the capital of the Sokoto Caliphate?",a:["Sokoto","Kano","Ibadan","Benin City"],c:0}]},
+{level:6,category:"African Kingdoms & Empires",questions:[
+{q:"Which empire controlled much of West Africa during the 15th and 16th centuries?",a:["Songhai Empire","Roman Empire","Inca Empire","Ottoman Empire"],c:0},
+{q:"Who was a famous ruler of the Songhai Empire?",a:["Askia Muhammad","Cleopatra","Hannibal","Charlemagne"],c:0},
+{q:"The Kingdom of Benin was especially famous for its what?",a:["Bronze and brass artworks","Pyramids","Paper money","Stone temples"],c:0},
+{q:"Which West African empire was founded by Sundiata Keita?",a:["Mali Empire","Songhai Empire","Oyo Empire","Kanem-Bornu"],c:0},
+{q:"The Oyo Empire was primarily associated with which people?",a:["Yoruba","Zulu","Berber","Amhara"],c:0}]},
+{level:7,category:"Ancient Civilizations",questions:[
+{q:"Which civilization developed democracy in the city-state of Athens?",a:["Ancient Greece","Ancient Egypt","Persia","Carthage"],c:0},
+{q:"The Colosseum was built in which ancient city?",a:["Rome","Athens","Alexandria","Babylon"],c:0},
+{q:"Which civilization built Machu Picchu?",a:["Inca","Maya","Aztec","Roman"],c:0},
+{q:"The Code of Hammurabi is associated with which ancient civilization?",a:["Babylonian","Egyptian","Greek","Chinese"],c:0},
+{q:"Which ancient civilization developed along the Indus River and its tributaries?",a:["Indus Valley civilization","Minoan civilization","Maya civilization","Nubian civilization"],c:0}]},
+{level:8,category:"Explorers & Discoveries",questions:[
+{q:"Who is traditionally credited with reaching the Americas in 1492 while sailing for Spain?",a:["Christopher Columbus","Ferdinand Magellan","James Cook","Marco Polo"],c:0},
+{q:"Who led the first expedition to circumnavigate the Earth, although he died before it was completed?",a:["Ferdinand Magellan","Vasco da Gama","Amerigo Vespucci","Zheng He"],c:0},
+{q:"Who is credited with developing the practical steam engine that helped power the Industrial Revolution?",a:["James Watt","Isaac Newton","Galileo Galilei","Michael Faraday"],c:0},
+{q:"Who formulated the three laws of motion?",a:["Isaac Newton","Albert Einstein","Nikola Tesla","Louis Pasteur"],c:0},
+{q:"Who discovered penicillin in 1928?",a:["Alexander Fleming","Marie Curie","Charles Darwin","Gregor Mendel"],c:0}]},
+{level:9,category:"Major Wars & Historical Events",questions:[
+{q:"World War II ended in which year?",a:["1943","1944","1945","1946"],c:2},
+{q:"Which event is commonly regarded as the immediate trigger for World War I?",a:["Assassination of Archduke Franz Ferdinand","Fall of Rome","Boston Tea Party","Russian Revolution"],c:0},
+{q:"The Berlin Wall fell in which year?",a:["1985","1987","1989","1991"],c:2},
+{q:"The United Nations was founded in which year?",a:["1919","1945","1950","1960"],c:1},
+{q:"Which war is associated with Hannibal crossing the Alps?",a:["Second Punic War","Peloponnesian War","Hundred Years' War","Seven Years' War"],c:0}]},
+{level:10,category:"Mixed Challenge",questions:[
+{q:"Which treaty divided newly claimed overseas territories between Spain and Portugal in 1494?",a:["Treaty of Tordesillas","Treaty of Versailles","Treaty of Utrecht","Treaty of Vienna"],c:0},
+{q:"Which Byzantine emperor is associated with the codification of Roman law known as the Corpus Juris Civilis?",a:["Justinian I","Constantine XI","Heraclius","Basil II"],c:0},
+{q:"Which battle in 1066 led to the Norman conquest of England?",a:["Battle of Hastings","Battle of Waterloo","Battle of Agincourt","Battle of Tours"],c:0},
+{q:"Which dynasty ruled China during the era when Zheng He made his famous voyages?",a:["Ming dynasty","Qin dynasty","Han dynasty","Tang dynasty"],c:0},
+{q:"Which ancient Persian ruler is associated with the founding of the Achaemenid Empire?",a:["Cyrus the Great","Darius III","Xerxes II","Artaxerxes III"],c:0}]},
+
+{level:11,category:"African Leaders",questions:[
+{q:"Who was Ghana's first prime minister and later president?",a:["Kwame Nkrumah","Jomo Kenyatta","Julius Nyerere","Patrice Lumumba"],c:0},
+{q:"Jomo Kenyatta became the first prime minister of which country?",a:["Kenya","Ghana","Uganda","Tanzania"],c:0},
+{q:"Julius Nyerere was a leading political figure in which country?",a:["Tanzania","Senegal","Nigeria","Ethiopia"],c:0},
+{q:"Nelson Mandela became president of South Africa in which year?",a:["1990","1994","1998","2000"],c:1},
+{q:"Patrice Lumumba was a prominent leader in the independence movement of which country?",a:["Democratic Republic of the Congo","Ghana","Algeria","Kenya"],c:0}]},
+{level:12,category:"African Kingdoms & Empires",questions:[
+{q:"The Kanem-Bornu Empire was centered around the region of which lake?",a:["Lake Chad","Lake Victoria","Lake Tanganyika","Lake Malawi"],c:0},
+{q:"Which empire was centered in present-day Ethiopia and Eritrea and was known for the city of Aksum?",a:["Aksumite Empire","Mali Empire","Songhai Empire","Oyo Empire"],c:0},
+{q:"The Asante Empire was centered in which part of modern Ghana?",a:["Southern Ghana","Northern Ghana","Coastal Senegal","Eastern Kenya"],c:0},
+{q:"Who is traditionally associated with the founding of the Asante Empire?",a:["Osei Tutu","Shaka Zulu","Sundiata Keita","Askia Muhammad"],c:0},
+{q:"The Ethiopian victory at Adwa in 1896 was against which European power?",a:["Italy","Britain","France","Portugal"],c:0}]},
+{level:13,category:"Ancient Civilizations",questions:[
+{q:"Which ancient civilization built the city of Teotihuacan in Mesoamerica?",a:["Teotihuacan civilization","Roman civilization","Nubian civilization","Minoan civilization"],c:0},
+{q:"The Rosetta Stone helped scholars decipher which ancient Egyptian writing system?",a:["Hieroglyphs","Cuneiform","Linear B","Runes"],c:0},
+{q:"Which ancient city was famous for its hanging gardens in traditional accounts?",a:["Babylon","Sparta","Carthage","Knossos"],c:0},
+{q:"Which civilization used Linear B for an early form of Greek?",a:["Mycenaean civilization","Maya civilization","Inca civilization","Phoenician civilization"],c:0},
+{q:"Which ancient people are associated with the city of Carthage?",a:["Phoenicians","Vikings","Aztecs","Sumerians"],c:0}]},
+{level:14,category:"Nigerian History",questions:[
+{q:"Nigeria became a republic in which year?",a:["1960","1963","1966","1970"],c:1},
+{q:"Which Nigerian region was formerly known as the Western Region and became central to the Yoruba political tradition?",a:["Western Region","Northern Region","Eastern Region","Mid-Western Region"],c:0},
+{q:"The Nigerian Civil War lasted from which years?",a:["1966–1969","1967–1970","1970–1973","1960–1963"],c:1},
+{q:"Which city was the capital of Nigeria before Abuja?",a:["Lagos","Kaduna","Ibadan","Enugu"],c:0},
+{q:"Which Nigerian national conference helped shape the country's independence constitution in the 1950s?",a:["Lagos Constitutional Conference","Berlin Conference","Accra Conference","Casablanca Conference"],c:0}]},
+{level:15,category:"World History",questions:[
+{q:"Which ancient trade route connected East Asia with the Mediterranean world?",a:["Silk Road","Amber Road","Royal Road","Spice Road"],c:0},
+{q:"The Magna Carta was sealed in England in which year?",a:["1066","1215","1492","1642"],c:1},
+{q:"Which empire captured Constantinople in 1453?",a:["Ottoman Empire","Mali Empire","Mughal Empire","Inca Empire"],c:0},
+{q:"The Protestant Reformation is closely associated with which figure?",a:["Martin Luther","Galileo Galilei","Louis XIV","Niccolo Machiavelli"],c:0},
+{q:"Which event began in 1917 and led to the establishment of Soviet rule in Russia?",a:["Russian Revolution","French Revolution","Glorious Revolution","Meiji Restoration"],c:0}]},
+{level:16,category:"Wars & Battles",questions:[
+{q:"Which battle in 1815 ended Napoleon's rule as emperor?",a:["Waterloo","Trafalgar","Austerlitz","Leipzig"],c:0},
+{q:"The Battle of Marathon was fought between the Greeks and which empire?",a:["Persian Empire","Roman Empire","Ottoman Empire","Mongol Empire"],c:0},
+{q:"Which conflict was fought between the northern and southern states of the United States from 1861 to 1865?",a:["American Civil War","War of 1812","Mexican-American War","Spanish-American War"],c:0},
+{q:"The Battle of Hastings took place in which year?",a:["1066","1215","1415","1666"],c:0},
+{q:"Which war was fought between Athens and Sparta?",a:["Peloponnesian War","Punic War","Crimean War","Thirty Years' War"],c:0}]},
+{level:17,category:"Explorers & Discoveries",questions:[
+{q:"Which Portuguese explorer reached India by sea around the Cape of Good Hope in 1498?",a:["Vasco da Gama","Bartolomeu Dias","Henry the Navigator","Pedro Cabral"],c:0},
+{q:"Who was the first person to walk on the Moon?",a:["Neil Armstrong","Yuri Gagarin","Buzz Aldrin","John Glenn"],c:0},
+{q:"Who developed the first successful smallpox vaccine?",a:["Edward Jenner","Louis Pasteur","Robert Koch","Joseph Lister"],c:0},
+{q:"Which scientist proposed the theory of evolution by natural selection?",a:["Charles Darwin","Gregor Mendel","Isaac Newton","James Clerk Maxwell"],c:0},
+{q:"Who was the first human to orbit Earth?",a:["Yuri Gagarin","Neil Armstrong","Alan Shepard","John Glenn"],c:0}]},
+{level:18,category:"Kings & Rulers",questions:[
+{q:"Who was known as the Sun King of France?",a:["Louis XIV","Louis XVI","Henry VIII","Charles V"],c:0},
+{q:"Which Egyptian queen formed an alliance with Julius Caesar and Mark Antony?",a:["Cleopatra VII","Hatshepsut","Nefertiti","Nefertari"],c:0},
+{q:"Who was the first emperor of unified China?",a:["Qin Shi Huang","Kublai Khan","Wu Zetian","Han Wudi"],c:0},
+{q:"Which Mongol ruler founded the Yuan dynasty in China?",a:["Kublai Khan","Genghis Khan","Timur","Batu Khan"],c:0},
+{q:"Which English king is associated with the Battle of Agincourt?",a:["Henry V","Richard I","Edward III","William I"],c:0}]},
+{level:19,category:"Inventions & Ideas",questions:[
+{q:"Johannes Gutenberg is associated with the development of what in Europe?",a:["Printing press","Steam locomotive","Telegraph","Telescope"],c:0},
+{q:"Who is credited with inventing the telephone?",a:["Alexander Graham Bell","Thomas Edison","Guglielmo Marconi","Nikola Tesla"],c:0},
+{q:"The first successful powered airplane flight is associated with which brothers?",a:["Wright brothers","Grimm brothers","Montgolfier brothers","Warner brothers"],c:0},
+{q:"Who developed the first widely used alternating-current induction motor?",a:["Nikola Tesla","James Watt","Thomas Edison","Michael Faraday"],c:0},
+{q:"Which invention made long-distance coded electrical communication possible in the 19th century?",a:["Telegraph","Microscope","Steamship","Compass"],c:0}]},
+{level:20,category:"Master Challenge",questions:[
+{q:"Which African empire had its capital at Gao and later Timbuktu became a major center under its rule?",a:["Songhai Empire","Mali Empire","Benin Empire","Kush"],c:0},
+{q:"Which agreement created the League of Nations framework after World War I?",a:["Treaty of Versailles","Treaty of Tordesillas","Treaty of Utrecht","Treaty of Ghent"],c:0},
+{q:"Which ancient civilization is associated with the city of Mohenjo-daro?",a:["Indus Valley civilization","Roman civilization","Minoan civilization","Inca civilization"],c:0},
+{q:"Which empire reached its height under Mansa Musa?",a:["Mali Empire","Songhai Empire","Ottoman Empire","Aksumite Empire"],c:0},
+{q:"Which 20th-century movement sought independence from European colonial rule across Africa and Asia?",a:["Decolonization","Feudalism","Mercantilism","Manorialism"],c:0}]},
+,{level:21,category:"Nigerian Leaders & Politics",questions:[
+{q:"Who served as Nigeria's military head of state from 1966 to 1975?",a:["Yakubu Gowon","Murtala Mohammed","Ibrahim Babangida","Sani Abacha"],c:0},
+{q:"Who became Nigeria's military head of state in 1975 after Yakubu Gowon's government was overthrown?",a:["Murtala Mohammed","Olusegun Obasanjo","Muhammadu Buhari","Shehu Shagari"],c:0},
+{q:"Who became Nigeria's first elected executive president in 1979?",a:["Shehu Shagari","Nnamdi Azikiwe","Obafemi Awolowo","Yakubu Gowon"],c:0},
+{q:"Which Nigerian leader was assassinated in 1976 during an attempted coup?",a:["Murtala Mohammed","Tafawa Balewa","Nnamdi Azikiwe","Ahmadu Bello"],c:0},
+{q:"Who was the first indigenous Governor-General of Nigeria?",a:["Nnamdi Azikiwe","Abubakar Tafawa Balewa","Ahmadu Bello","Obafemi Awolowo"],c:0}]},
+{level:22,category:"West African History",questions:[
+{q:"Which city was a major capital of the medieval Ghana Empire?",a:["Kumbi Saleh","Cairo","Benin City","Kano"],c:0},
+{q:"The Ghana Empire was also known by what name in some historical sources?",a:["Wagadou","Songhai","Mossi","Kanem"],c:0},
+{q:"Which empire succeeded the Ghana Empire as a major West African power?",a:["Mali Empire","Roman Empire","Kongo Kingdom","Aksumite Empire"],c:0},
+{q:"Which city was an important center in the ancient Ghana Empire's gold trade?",a:["Awdaghust","London","Alexandria","Kilwa"],c:0},
+{q:"The trans-Saharan trade connected West Africa especially with which region?",a:["North Africa","South America","East Asia","Northern Europe"],c:0}]},
+{level:23,category:"Ancient Egypt",questions:[
+{q:"Which Egyptian ruler is famous for a largely intact tomb discovered in 1922?",a:["Tutankhamun","Ramses II","Akhenaten","Khufu"],c:0},
+{q:"Which pharaoh commissioned the Great Pyramid at Giza according to the traditional attribution?",a:["Khufu","Khafre","Menkaure","Djoser"],c:0},
+{q:"Hatshepsut was one of ancient Egypt's most famous what?",a:["Female pharaohs","Roman governors","Greek generals","Persian kings"],c:0},
+{q:"Which ancient Egyptian city was associated with the temple complex at Karnak?",a:["Thebes","Memphis","Alexandria","Giza"],c:0},
+{q:"What was the ancient Egyptian writing system using picture signs called?",a:["Hieroglyphs","Cuneiform","Sanskrit","Runes"],c:0}]},
+{level:24,category:"Medieval History",questions:[
+{q:"Which empire was ruled by Charlemagne in the early 9th century?",a:["Carolingian Empire","Ottoman Empire","Mali Empire","Byzantine Empire"],c:0},
+{q:"Which city was the capital of the Byzantine Empire?",a:["Constantinople","Rome","Athens","Antioch"],c:0},
+{q:"The Crusades were primarily a series of conflicts involving control of which region?",a:["The Holy Land","West Africa","Central Asia","Scandinavia"],c:0},
+{q:"Which people conquered England in 1066?",a:["Normans","Vikings of Iceland","Romans","Mongols"],c:0},
+{q:"The medieval university tradition expanded notably in which continent?",a:["Europe","Australia","Antarctica","South America"],c:0}]},
+{level:25,category:"African Geography & History",questions:[
+{q:"Which ancient city on the Swahili Coast became a major trading center in present-day Tanzania?",a:["Kilwa Kisiwani","Kumasi","Gao","Meroe"],c:0},
+{q:"The Kingdom of Kongo was centered mainly in which part of Africa?",a:["Central Africa","North Africa","Southern Europe","East Asia"],c:0},
+{q:"Which modern country contains the historic ruins of Lalibela's famous rock-hewn churches?",a:["Ethiopia","Ghana","Morocco","Nigeria"],c:0},
+{q:"Which African lake is one of the largest freshwater lakes in the world by surface area?",a:["Lake Victoria","Lake Chad","Lake Turkana","Lake Tana"],c:0},
+{q:"The ancient city of Meroe was associated with which kingdom?",a:["Kush","Mali","Songhai","Benin"],c:0}]},
+{level:26,category:"Revolutions",questions:[
+{q:"Which revolution began in 1775 in the Thirteen Colonies?",a:["American Revolution","French Revolution","Russian Revolution","Haitian Revolution"],c:0},
+{q:"The Haitian Revolution began in which Caribbean colony?",a:["Saint-Domingue","Jamaica","Cuba","Barbados"],c:0},
+{q:"Which revolution began in Russia in 1917?",a:["Russian Revolution","Glorious Revolution","Industrial Revolution","Meiji Restoration"],c:0},
+{q:"The Industrial Revolution first developed on a large scale in which country?",a:["Britain","China","Brazil","Egypt"],c:0},
+{q:"The French Revolution began in which year?",a:["1789","1776","1815","1848"],c:0}]},
+{level:27,category:"World Leaders",questions:[
+{q:"Who was the British prime minister during much of World War II?",a:["Winston Churchill","Neville Chamberlain","Clement Attlee","David Lloyd George"],c:0},
+{q:"Who led the Soviet Union during much of World War II?",a:["Joseph Stalin","Vladimir Lenin","Nikita Khrushchev","Leon Trotsky"],c:0},
+{q:"Who became the first president of the Fifth French Republic?",a:["Charles de Gaulle","Georges Pompidou","François Mitterrand","Napoleon III"],c:0},
+{q:"Who was the first chancellor of the German Empire in 1871?",a:["Otto von Bismarck","Kaiser Wilhelm II","Frederick the Great","Metternich"],c:0},
+{q:"Who was the first prime minister of India after independence?",a:["Jawaharlal Nehru","Mahatma Gandhi","Sardar Patel","Rajendra Prasad"],c:0}]},
+{level:28,category:"Science in History",questions:[
+{q:"Who developed the heliocentric model that placed the Sun at the center of the planetary system?",a:["Nicolaus Copernicus","Aristotle","Ptolemy","Archimedes"],c:0},
+{q:"Who is associated with the discovery of the law of universal gravitation?",a:["Isaac Newton","Galileo Galilei","Johannes Kepler","Albert Einstein"],c:0},
+{q:"Who proposed the theory of relativity?",a:["Albert Einstein","Marie Curie","Charles Darwin","James Clerk Maxwell"],c:0},
+{q:"Marie Curie conducted pioneering research on which phenomenon?",a:["Radioactivity","Electricity","Evolution","Plate tectonics"],c:0},
+{q:"Who discovered the circulation of blood through the body in early modern Europe?",a:["William Harvey","Andreas Vesalius","Edward Jenner","Robert Hooke"],c:0}]},
+{level:29,category:"Empires of Asia",questions:[
+{q:"Which empire was founded by Babur in the Indian subcontinent?",a:["Mughal Empire","Ottoman Empire","Maurya Empire","Gupta Empire"],c:0},
+{q:"Which ruler commissioned the Taj Mahal?",a:["Shah Jahan","Akbar","Aurangzeb","Babur"],c:0},
+{q:"Which empire was ruled by Genghis Khan and his successors across much of Eurasia?",a:["Mongol Empire","Mughal Empire","Ottoman Empire","Mauryan Empire"],c:0},
+{q:"Which Japanese period began in 1603 under Tokugawa Ieyasu?",a:["Tokugawa shogunate","Meiji period","Heian period","Nara period"],c:0},
+{q:"Which ancient Indian emperor promoted Buddhism after the Kalinga War?",a:["Ashoka","Chandragupta Maurya","Samudragupta","Harsha"],c:0}]},
+{level:30,category:"Master Challenge",questions:[
+{q:"Which West African ruler's pilgrimage to Mecca became famous for the wealth he displayed?",a:["Mansa Musa","Sundiata Keita","Askia Muhammad","Sonni Ali"],c:0},
+{q:"Which 1884–1885 meeting formalized European rules for the partition of Africa?",a:["Berlin Conference","Congress of Vienna","Treaty of Utrecht","Paris Peace Conference"],c:0},
+{q:"Which ancient empire used a famous road system connecting its territories from Iran toward Anatolia?",a:["Achaemenid Persian Empire","Mali Empire","Inca Empire","Mongol Empire"],c:0},
+{q:"Which 1215 document limited the power of the English king?",a:["Magna Carta","Domesday Book","Bill of Rights 1689","Petition of Right"],c:0},
+{q:"Which event is commonly used to mark the beginning of the European Renaissance?",a:["A cultural revival in Italian city-states","The fall of Constantinople alone","The invention of gunpowder","The Roman conquest of Britain"],c:0}]},
+{level:31,category:"Nigerian History",questions:[
+{q:"Which Nigerian city was historically a major center of the Sokoto Caliphate?",a:["Sokoto","Port Harcourt","Lagos","Calabar"],c:0},
+{q:"Who founded the Sokoto Caliphate in the early 19th century?",a:["Usman dan Fodio","Ahmadu Bello","Jaja of Opobo","Nnamdi Azikiwe"],c:0},
+{q:"The ancient city of Ife is especially associated with which artistic tradition?",a:["Naturalistic brass and terracotta sculpture","Roman mosaics","Egyptian pyramids","Viking shipbuilding"],c:0},
+{q:"The Benin Kingdom was centered in which present-day Nigerian state?",a:["Edo State","Kano State","Borno State","Kaduna State"],c:0},
+{q:"Which Nigerian city was historically important to the Hausa city-state system?",a:["Kano","Warri","Uyo","Aba"],c:0}]},
+{level:32,category:"Ancient Greece",questions:[
+{q:"Which Greek city-state was famous for its military society?",a:["Sparta","Athens","Corinth","Thebes"],c:0},
+{q:"Who was a famous student of Socrates and teacher of Aristotle?",a:["Plato","Herodotus","Pericles","Homer"],c:0},
+{q:"Which Greek historian is often called the 'Father of History'?",a:["Herodotus","Thucydides","Plutarch","Xenophon"],c:0},
+{q:"Alexander the Great was king of which ancient kingdom?",a:["Macedon","Sparta","Carthage","Persia"],c:0},
+{q:"Which epic poems are traditionally attributed to Homer?",a:["The Iliad and the Odyssey","The Aeneid and Metamorphoses","The Republic and Laws","The Histories and Politics"],c:0}]},
+{level:33,category:"Ancient Rome",questions:[
+{q:"What language was widely used in the administration of the western Roman Empire?",a:["Latin","Greek","Arabic","Sanskrit"],c:0},
+{q:"Which Roman city was destroyed by Mount Vesuvius in AD 79?",a:["Pompeii","Sparta","Carthage","Ephesus"],c:0},
+{q:"Which Roman emperor adopted Christianity and founded Constantinople as a new imperial capital?",a:["Constantine I","Augustus","Nero","Trajan"],c:0},
+{q:"Which famous Roman road connected Rome with southern Italy?",a:["Via Appia","Silk Road","Royal Road","Amber Road"],c:0},
+{q:"What title did Roman leaders often use after the republic became an empire?",a:["Emperor","Pharaoh","Shogun","Caliph"],c:0}]},
+{level:34,category:"American History",questions:[
+{q:"The Declaration of Independence of the United States was adopted in which year?",a:["1776","1789","1812","1861"],c:0},
+{q:"Which war was fought between the United States and Britain from 1812 to 1815?",a:["War of 1812","Civil War","Revolutionary War","Mexican-American War"],c:0},
+{q:"Who issued the Emancipation Proclamation during the American Civil War?",a:["Abraham Lincoln","Andrew Jackson","George Washington","Ulysses S. Grant"],c:0},
+{q:"Which document established the framework of the U.S. federal government in 1787?",a:["U.S. Constitution","Articles of Confederation","Bill of Rights","Declaration of Independence"],c:0},
+{q:"Which city was the first permanent English settlement in Virginia?",a:["Jamestown","Boston","Philadelphia","Charleston"],c:0}]},
+{level:35,category:"Colonial Africa & Independence",questions:[
+{q:"Ghana became the first sub-Saharan African colony to gain independence in which year?",a:["1957","1960","1963","1952"],c:0},
+{q:"Which leader is strongly associated with Ghana's independence movement?",a:["Kwame Nkrumah","Jomo Kenyatta","Julius Nyerere","Haile Selassie"],c:0},
+{q:"Algeria gained independence from which European country in 1962?",a:["France","Britain","Portugal","Belgium"],c:0},
+{q:"Kenya gained independence from which colonial power in 1963?",a:["Britain","France","Italy","Spain"],c:0},
+{q:"Angola gained independence from which country in 1975?",a:["Portugal","Belgium","France","Britain"],c:0}]},
+{level:36,category:"Cold War",questions:[
+{q:"Which two superpowers dominated the Cold War?",a:["United States and Soviet Union","Britain and France","China and Japan","Germany and Italy"],c:0},
+{q:"The Berlin Wall was built in which year?",a:["1961","1945","1979","1989"],c:0},
+{q:"Which military alliance was formed in 1949 led by the United States and its Western allies?",a:["NATO","Warsaw Pact","League of Nations","European Union"],c:0},
+{q:"The Cuban Missile Crisis occurred in which year?",a:["1962","1956","1968","1975"],c:0},
+{q:"The Soviet Union dissolved in which year?",a:["1991","1989","1995","1979"],c:0}]},
+{level:37,category:"Religion & Civilization",questions:[
+{q:"Which ancient civilization developed the city of Jerusalem as an important historical and religious center?",a:["Ancient Israelites","Maya","Inca","Vikings"],c:0},
+{q:"Which religion was founded by Siddhartha Gautama?",a:["Buddhism","Christianity","Islam","Sikhism"],c:0},
+{q:"Which city is traditionally regarded as the birthplace of the Prophet Muhammad?",a:["Mecca","Medina","Jerusalem","Damascus"],c:0},
+{q:"Which religion spread widely through the Roman Empire before becoming favored by Constantine?",a:["Christianity","Buddhism","Shinto","Hinduism"],c:0},
+{q:"Which ancient Indian texts are among the oldest sacred texts of Hindu traditions?",a:["Vedas","Gospels","Hadith","Analects"],c:0}]},
+{level:38,category:"Trade & Exploration",questions:[
+{q:"Which explorer reached the Cape of Good Hope from Europe in 1488?",a:["Bartolomeu Dias","Vasco da Gama","Christopher Columbus","Ferdinand Magellan"],c:0},
+{q:"Which Chinese admiral led large treasure voyages during the Ming dynasty?",a:["Zheng He","Kublai Khan","Sun Yat-sen","Confucius"],c:0},
+{q:"Which ancient trade route linked China with the Mediterranean?",a:["Silk Road","Royal Road","Via Appia","Amber Road"],c:0},
+{q:"Which African island became a major Portuguese base in Indian Ocean trade?",a:["Mozambique Island","Gorée","Bioko","Zanzibar"],c:0},
+{q:"Which city was a major medieval trading center on the East African coast?",a:["Kilwa","Marrakesh","Timbuktu","Kano"],c:0}]},
+{level:39,category:"Historical Documents",questions:[
+{q:"Which document declared the independence of the thirteen American colonies?",a:["Declaration of Independence","Magna Carta","Treaty of Paris","U.S. Constitution"],c:0},
+{q:"Which 1689 English document limited royal power and strengthened Parliament?",a:["English Bill of Rights","Magna Carta","Act of Union","Petition of Right"],c:0},
+{q:"Which treaty formally ended the American Revolutionary War?",a:["Treaty of Paris 1783","Treaty of Versailles","Treaty of Ghent","Treaty of Utrecht"],c:0},
+{q:"Which document is associated with the abolition of slavery in the British Empire in 1833?",a:["Slavery Abolition Act","Magna Carta","Navigation Acts","Corn Laws"],c:0},
+{q:"Which 1945 document established the framework of the United Nations?",a:["UN Charter","Atlantic Charter","Geneva Convention","Treaty of Rome"],c:0}]},
+{level:40,category:"Ultimate History Challenge",questions:[
+{q:"Which West African empire became famous under Askia Muhammad after the reign of Sunni Ali?",a:["Songhai Empire","Mali Empire","Ghana Empire","Oyo Empire"],c:0},
+{q:"Which ancient civilization is credited with one of the earliest known law codes associated with Hammurabi?",a:["Babylonian civilization","Roman civilization","Greek civilization","Mayan civilization"],c:0},
+{q:"Which 1453 event is often used to mark the end of the Byzantine Empire?",a:["Ottoman capture of Constantinople","Fall of Rome","Battle of Hastings","Crusade of 1099"],c:0},
+{q:"Which 1885 meeting divided European claims and rules concerning African territories without African rulers being represented?",a:["Berlin Conference","Vienna Congress","Paris Conference","Casablanca Conference"],c:0},
+{q:"Which broad historical process describes African and Asian territories gaining political independence from European empires after World War II?",a:["Decolonization","Industrialization","Feudalization","Urbanization"],c:0}]}
+];
+
+const KEY="history_master_save_v2";
+let save=JSON.parse(localStorage.getItem(KEY)||"null")||{unlocked:1,completed:[],coins:100,lives:3,high:0,sound:true,streak:0,bestStreak:0,achievements:[],lastPlayed:""};
+save.unlocked=save.unlocked||1;save.completed=Array.isArray(save.completed)?save.completed:[];save.coins=Number.isFinite(save.coins)?save.coins:100;save.lives=Math.min(3,Math.max(0,save.lives??3));save.high=save.high||0;save.sound=typeof save.sound==="boolean"?save.sound:true;save.streak=save.streak||0;save.bestStreak=save.bestStreak||0;save.achievements=Array.isArray(save.achievements)?save.achievements:[];save.lastDaily=save.lastDaily||"";
+let game={level:1,index:0,score:0,fifty:false,skip:false,locked:false,time:30,timer:null};
+const $=id=>document.getElementById(id);
+function persist(){localStorage.setItem(KEY,JSON.stringify(save));stats();}
+function stats(){$("coins").textContent=save.coins;$('lives').textContent=save.lives;$('high').textContent=save.high; if($('streak'))$('streak').textContent=save.streak;}
+function beep(freq=660,dur=.08){if(!save.sound)return;try{let a=new(window.AudioContext||window.webkitAudioContext)(),o=a.createOscillator(),g=a.createGain();o.frequency.value=freq;o.connect(g);g.connect(a.destination);g.gain.value=.04;o.start();o.stop(a.currentTime+dur)}catch(e){}}
+function secondsForLevel(n){return n<=3?30:n<=6?25:n<=10?20:n<=20?18:15}
+function stopTimer(){if(game.timer){clearInterval(game.timer);game.timer=null}}
+function startTimer(){stopTimer();game.time=secondsForLevel(game.level);$('timer').textContent=game.time;$('timerbox')?.classList.remove('warning');game.timer=setInterval(()=>{game.time--;$('timer').textContent=game.time;if(game.time<=5)$('timerbox')?.classList.add('warning');if(game.time<=0){stopTimer();timeout()}},1000)}
+function timeout(){if(game.locked)return;game.locked=true;loseLife("Time is up. Restarting this level...");}
+function loseLife(message){save.lives=Math.max(0,save.lives-1);save.streak=0;beep(180,.18);persist();$('msg').textContent=message;$('msg').className='msg bad';setTimeout(()=>{if(save.lives===0){save.lives=3;persist();rules('You used all 3 lives. Your lives have been restored to 3. You can also recover a single life for 30 coins when below 3 lives.')}start(game.level)},900)}
+function show(id){document.querySelectorAll('.screen').forEach(x=>x.classList.remove('active'));$(id).classList.add('active')}
+function openMap(){renderMap();show('map')}
+function categories(){return [...new Set(BANK.map(x=>x.category))]}
+function renderMap(){let wrap=$('levels');wrap.innerHTML='';let filter=$('catFilter').value;for(let n=1;n<=100;n++){let d=data(n);if(filter!=='All'&&d&&d.category!==filter)continue;let b=document.createElement('button');b.className='level '+(n<=save.unlocked?'':'lock')+' '+(save.completed.includes(n)?'done ':'')+(n===save.unlocked?'current':'');b.textContent=(save.completed.includes(n)?'✓ ':'')+n;b.disabled=n>save.unlocked;if(n<=save.unlocked)b.onclick=()=>start(n);wrap.appendChild(b)}$('current').textContent='Current: Level '+save.unlocked}
+function fillCategories(){let sel=$('catFilter');let existing=[...sel.options].map(o=>o.value);categories().forEach(c=>{if(!existing.includes(c)){let o=document.createElement('option');o.value=c;o.textContent=c;sel.appendChild(o)}})}
+function data(n){return BANK.find(x=>x.level===n)}
+function start(n){let d=data(n);if(!d){rules('Level '+n+' is reserved for a future question pack. The engine is ready for expansion.');return}stopTimer();game={level:n,index:0,score:0,fifty:false,skip:false,locked:false,time:secondsForLevel(n),timer:null};render();show('game')}
+function render(){let d=data(game.level),item=d.questions[game.index];stopTimer();$('levelTitle').textContent='LEVEL '+game.level;$('score').textContent=game.score;$('qnum').textContent='QUESTION '+(game.index+1)+' OF '+d.questions.length+' • '+d.category;$('q').textContent=item.q;$('bar').style.width=((game.index+1)/d.questions.length*100)+'%';let answers=$('answers');answers.innerHTML='';item.a.forEach((x,i)=>{let b=document.createElement('button');b.className='answer';b.textContent=String.fromCharCode(65+i)+'. '+x;b.onclick=()=>answer(i,b);answers.appendChild(b)});$('msg').textContent='';$('msg').className='msg';$('fifty').disabled=game.fifty||save.coins<5;$('skip').disabled=game.skip||save.coins<10;stats();startTimer()}
+function unlockAchievement(id,name){if(!save.achievements.includes(id)){save.achievements.push(id);beep(1040,.15);setTimeout(()=>beep(1320,.15),100);return ' 🏆 '+name+' unlocked!'}return ''}
+function answer(choice,btn){if(game.locked)return;game.locked=true;stopTimer();let item=data(game.level).questions[game.index];document.querySelectorAll('.answer').forEach(b=>b.disabled=true);if(choice===item.c){btn.classList.add('correct');save.streak++;save.bestStreak=Math.max(save.bestStreak,save.streak);let speed=Math.max(0,game.time)*5;let streakBonus=Math.min(100,save.streak*10);let gained=100*game.level+speed+streakBonus;game.score+=gained;save.coins+=10;save.high=Math.max(save.high,game.score);let ach='';if(save.streak>=5)ach+=unlockAchievement('streak5','5 Answer Streak');if(game.score>=1000)ach+=unlockAchievement('score1000','1,000 Points');if(save.streak>=10)ach+=unlockAchievement('streak10','10 Answer Streak');beep(880,.08);$('msg').textContent='Correct! +'+gained+' points, +10 coins.'+ach;$('msg').className='msg good';persist();setTimeout(()=>{game.index++;game.locked=false;if(game.index>=data(game.level).questions.length)finish();else render()},650)}else{btn.classList.add('wrong');loseLife('Wrong answer. Restarting this level…')}}
+function finish(){if(!save.completed.includes(game.level))save.completed.push(game.level);save.high=Math.max(save.high,game.score);save.unlocked=Math.max(save.unlocked,game.level+1);if(save.lives<3)save.lives++;let ach='';if(game.level>=1)ach+=unlockAchievement('firstlevel','First Level Complete');if(game.level>=5)ach+=unlockAchievement('level5','Level 5 Reached');if(game.level>=10)ach+=unlockAchievement('level10','Level 10 Reached');if(game.level>=20)ach+=unlockAchievement('level20','Level 20 Master');if(game.level>=30)ach+=unlockAchievement('level30','Level 30 Reached');if(game.level>=40)ach+=unlockAchievement('level40','Level 40 Ultimate');persist();rules('LEVEL '+game.level+' COMPLETE! Level '+(game.level+1)+' is unlocked. '+(save.lives<3?'You recovered 1 life. ':'')+ach)}
+function fifty(){if(game.fifty||save.coins<5)return;let c=data(game.level).questions[game.index].c;let wrong=[0,1,2,3].filter(i=>i!==c).sort(()=>Math.random()-.5).slice(0,2);document.querySelectorAll('.answer').forEach((b,i)=>{if(wrong.includes(i)){b.style.visibility='hidden';b.disabled=true}});game.fifty=true;save.coins-=5;persist()}
+function skip(){if(game.skip||save.coins<10)return;if(game.index<data(game.level).questions.length-1){game.index++;game.skip=true;save.coins-=10;persist();render()}else rules('There is no next question to change to.')}
+function dailyReward(){const today=new Date().toISOString().slice(0,10);if(save.lastDaily===today){rules("Daily Reward","You have already claimed today's reward. Come back tomorrow.");return}save.lastDaily=today;save.coins+=25;unlockAchievement("daily","Daily Reward Claimed");persist();rules("Daily Reward Claimed!","You received 25 coins. Come back tomorrow for another reward.")}
+function recoverLife(){if(save.lives>=3){rules('You already have 3 lives.');return}if(save.coins<30){rules('You need 30 coins to recover 1 life.');return}save.coins-=30;save.lives++;persist();beep(740,.1);rules('❤️ 1 life recovered. You now have '+save.lives+' lives.')}
+function showAchievements(){let names={firstlevel:'🏆 First Level Complete',level5:'⭐ Level 5 Reached',level10:'🔥 Level 10 Reached',level20:'👑 Level 20 Master',daily:'🎁 Daily Reward',level30:'💎 Level 30 Reached',level40:'🏆 Level 40 Ultimate',score1000:'💯 1,000 Points',streak5:'🔥 5 Answer Streak',streak10:'⚡ 10 Answer Streak'};let all=Object.keys(names);$('achList').innerHTML=all.map(k=>'<p style="margin:10px 0">'+(save.achievements.includes(k)?names[k]:'🔒 '+names[k].replace(/^[^ ]+ /,'') )+'</p>').join('')+'<p>Best streak: <b>'+save.bestStreak+'</b></p>';$('achModal').classList.add('show')}
+function closeAchievements(){$('achModal').classList.remove('show')}
+function rules(t){$('mt').textContent=t?'HISTORY MASTER':'How to play';$('mb').textContent=t||'Answer all 5 questions in a level. Correct answers move you forward. A wrong answer or timeout restarts the current level and costs 1 life. Earn 10 coins per correct answer. 50/50 costs 5 coins; Change costs 10 coins; Recover 1 life costs 30 coins. Faster answers and streaks earn bonus points. High score and achievements are saved on this device.';$('modal').classList.add('show')}
+function toggleSound(){save.sound=!save.sound;persist();$('soundBtn').textContent=save.sound?'🔊 Sound ON':'🔇 Sound OFF'}
+function closeModal(){$('modal').classList.remove('show')}
+function playGame(){try{renderMap();show('map')}catch(err){console.error(err);if($('msg'))$('msg').textContent='Game could not open. Please refresh and try again.'}}
+$('playBtn').addEventListener('click',playGame);
+$('playBtn').addEventListener('pointerup',function(e){if(e.pointerType==='touch'){e.preventDefault();playGame();}});
+$('soundBtn').addEventListener('click',toggleSound);
+fillCategories();$('soundBtn').textContent=save.sound?'🔊 Sound ON':'🔇 Sound OFF';stats();
+</script>
+</body></html>
